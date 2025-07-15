@@ -4,9 +4,11 @@ import Main from "./Main";
 import Error from "./Error";
 import { useEffect, useReducer } from "react";
 import StartScreen from "./StartScreen";
+import FinishScreen from "./FinishScreen";
 import Question from "./Question";
 import NextButton from "./NextButton";
 import Progress from "./Progress";
+import RestartButton from "./RestartButton";
 
 const initialState = {
   questions: [],
@@ -14,6 +16,7 @@ const initialState = {
   index: 0,
   answer: null,
   points: 0,
+  highscore: 0,
 };
 
 const reducer = (state, action) => {
@@ -46,21 +49,30 @@ const reducer = (state, action) => {
         index: state.index + 1,
       };
 
+    case "finish":
+      return {
+        ...state,
+        status: "finished",
+        highscore:
+          state.points > state.highscore ? state.points : state.highscore,
+      };
+
+    case "restart":
+      return { ...initialState, status: "ready" };
+
     default:
       throw new Error("Action is unknown");
   }
 };
 
 const App = () => {
-  const [{ questions, status, index, answer, points }, dispatch] = useReducer(
-    reducer,
-    initialState,
-  );
+  const [{ questions, status, index, answer, points, highscore }, dispatch] =
+    useReducer(reducer, initialState);
 
   const numQuestions = questions.length;
   const totalPoints = questions.reduce(
     (pointsTotal, question) => pointsTotal + question.points,
-    0,
+    0
   );
 
   useEffect(() => {
@@ -93,7 +105,22 @@ const App = () => {
               dispatch={dispatch}
               answer={answer}
             />
-            <NextButton dispatch={dispatch} answer={answer} />
+            <NextButton
+              dispatch={dispatch}
+              answer={answer}
+              index={index}
+              numQuestions={numQuestions}
+            />
+          </>
+        )}
+        {status === "finished" && (
+          <>
+            <FinishScreen
+              points={points}
+              totalPoints={totalPoints}
+              highscore={highscore}
+            />
+            <RestartButton dispatch={dispatch} />
           </>
         )}
       </Main>
